@@ -176,25 +176,25 @@ def process_user_input(step, user_input, collected_data):
 def get_response_message(step, collected_data):
     """Generate appropriate response message based on step"""
     if step == ConversationStep.GREETING:
-        return "Welcome to our Travel Assistant! How can I help you today? Please select from: Booking Changes, Air Travel, Packages, Student Inquiry, Promotions, or Complaint."
+        return "Welcome! How can I help you today? Choose from: Booking Changes, Air Travel, Packages, Student Inquiry, Promotions, or Complaint."
     
     elif step == ConversationStep.GET_CATEGORY:
-        return f"You've selected {collected_data.get('category')}. Could I please have your full name?"
+        return f"Got it! What's your full name?"
     
     elif step == ConversationStep.GET_NAME:
         return f"Thank you, {collected_data.get('name')}. Could you provide your email address for contact purposes?"
     
     elif step == ConversationStep.GET_EMAIL:
-        return "Thanks for your email. What's your destination of interest?"
+        return "Got your email. What's your destination?"
     
     elif step == ConversationStep.GET_DESTINATION:
-        return f"Great! {collected_data.get('destination')} is an excellent choice. What are your travel dates (format: DD/MM/YYYY - DD/MM/YYYY)?"
+        return f"Great choice! When are you planning to travel?"
     
     elif step == ConversationStep.GET_DATES:
         return "How many tickets would you like to book?"
     
     elif step == ConversationStep.GET_TICKETS_COUNT:
-        return f"Please confirm your booking details:\nName: {collected_data.get('name')}\nEmail: {collected_data.get('email')}\nDestination: {collected_data.get('destination')}\nDates: {collected_data.get('travel_dates')}\nTickets: {collected_data.get('tickets_count')}\n\nType 'yes' to confirm or 'no' to cancel."
+        return f"Confirm your booking: \nName: {collected_data.get('name')}\nEmail: {collected_data.get('email')}\nDestination: {collected_data.get('destination')}\nDates: {collected_data.get('travel_dates')}\nTickets: {collected_data.get('tickets_count')}\n\nType 'yes' to confirm or 'no' to cancel."
     
     elif step == ConversationStep.CONFIRM_BOOKING:
         if collected_data.get('confirmed', False):
@@ -220,19 +220,18 @@ async def chat(request: ChatRequest):
     user_id = request.user_id
     user_message = request.message
     
-    # Create new session if it doesn't exist
+ # Create new session if it doesn't exist
     if user_id not in sessions:
         sessions[user_id] = {
-            "current_step": ConversationStep.GREETING,
+            "current_step": ConversationStep.GET_CATEGORY,  
             "collected_data": {},
             "memory": ConversationBufferMemory()
         }
         return ChatResponse(
-            message=get_response_message(ConversationStep.GREETING, {}),
-            current_step=ConversationStep.GET_CATEGORY,
+            message="Welcome to our Travel Assistant! How can I help you today? Please select from: Booking Changes, Air Travel, Packages, Student Inquiry, Promotions, or Complaint.",
+            current_step=ConversationStep.GET_CATEGORY,  
             collected_data={}
         )
-    
     session = sessions[user_id]
     current_step = session["current_step"]
     collected_data = session["collected_data"]
