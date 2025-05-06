@@ -220,18 +220,12 @@ async def chat(request: ChatRequest):
     user_id = request.user_id
     user_message = request.message
     
- # Create new session if it doesn't exist
     if user_id not in sessions:
         sessions[user_id] = {
-            "current_step": ConversationStep.GET_CATEGORY,  
+            "current_step": ConversationStep.GET_CATEGORY,
             "collected_data": {},
             "memory": ConversationBufferMemory()
         }
-        return ChatResponse(
-            message="Welcome to our Travel Assistant! How can I help you today? Please select from: Booking Changes, Air Travel, Packages, Student Inquiry, Promotions, or Complaint.",
-            current_step=ConversationStep.GET_CATEGORY,  
-            collected_data={}
-        )
     session = sessions[user_id]
     current_step = session["current_step"]
     collected_data = session["collected_data"]
@@ -263,22 +257,6 @@ async def chat(request: ChatRequest):
         current_step=next_step,
         collected_data=collected_data
     )
-
-@app.post("/start_chat")
-async def start_chat():
-    """Endpoint to start a new chat session"""
-    user_id = str(uuid.uuid4())
-    sessions[user_id] = {
-        "current_step": ConversationStep.GREETING,
-        "collected_data": {},
-        "memory": ConversationBufferMemory()
-    }
-    
-    return {
-        "user_id": user_id,
-        "message": get_response_message(ConversationStep.GREETING, {}),
-        "current_step": ConversationStep.GET_CATEGORY
-    }
 
 # Start the app
 if __name__ == "__main__":
