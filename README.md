@@ -71,7 +71,22 @@ pipenv install
 3. Create a `.env` file in the root directory with the following variables:
 
 ```
+# Database Configuration
+# Option 1: Individual components
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=travel_agent
+
+# Option 2: Full database URL (overrides individual components)
+# DATABASE_URL=postgresql://postgres:postgres@localhost:5432/travel_agent
+
+# API Configuration
 OPENAI_API_KEY=your_openai_api_key
+
+# For Docker
+DOCKER_DB_HOST=db
 ```
 
 4. Activate the virtual environment:
@@ -80,7 +95,17 @@ OPENAI_API_KEY=your_openai_api_key
 pipenv shell
 ```
 
-5. Run the application:
+5. Initialize the database:
+
+```bash
+# Create initial migration
+pipenv run db-revision "initial"
+
+# Apply migrations
+pipenv run db-migrate
+```
+
+6. Run the application:
 
 ```bash
 pipenv run start
@@ -98,7 +123,22 @@ cd TravelAgent.API
 2. Create a `.env` file in the root directory with the following variables:
 
 ```
+# Database Configuration
+# Option 1: Individual components
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=travel_agent
+
+# Option 2: Full database URL (overrides individual components)
+# DATABASE_URL=postgresql://postgres:postgres@localhost:5432/travel_agent
+
+# API Configuration
 OPENAI_API_KEY=your_openai_api_key
+
+# For Docker
+DOCKER_DB_HOST=db
 ```
 
 3. Build and run using Docker Compose:
@@ -108,6 +148,25 @@ docker-compose up --build
 ```
 
 The API will be available at `http://localhost:5000`
+
+## Database Schema
+
+The application uses PostgreSQL with the following main tables:
+
+- **users**: Stores user information
+  - id, email, name, created_at, updated_at
+
+- **inquiries**: Stores travel inquiries
+  - id, user_id, category, destination, travel_dates, tickets_count, status, created_at, updated_at
+
+- **conversations**: Stores chat conversations
+  - id, inquiry_id, current_step, collected_data, is_completed, created_at, updated_at
+
+- **messages**: Stores individual chat messages
+  - id, conversation_id, content, is_user, created_at
+
+- **audit_logs**: Stores system audit information
+  - id, table_name, record_id, action, old_values, new_values, user_id, timestamp, ip_address, user_agent
 
 ## API Documentation
 
