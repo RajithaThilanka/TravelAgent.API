@@ -53,6 +53,8 @@ TravelAgent.API/
 
 ## Setup
 
+### Option 1: Local Setup
+
 1. Clone the repository:
 
 ```bash
@@ -82,6 +84,27 @@ pipenv shell
 
 ```bash
 pipenv run start
+```
+
+### Option 2: Docker Setup
+
+1. Clone the repository:
+
+```bash
+git clone <repository-url>
+cd TravelAgent.API
+```
+
+2. Create a `.env` file in the root directory with the following variables:
+
+```
+OPENAI_API_KEY=your_openai_api_key
+```
+
+3. Build and run using Docker Compose:
+
+```bash
+docker-compose up --build
 ```
 
 The API will be available at `http://localhost:5000`
