@@ -1,6 +1,6 @@
 # Travel Agent API
 
-A FastAPI-based travel agent chatbot that handles various travel-related inquiries and bookings.
+A FastAPI-based travel agent chatbot that handles various travel-related inquiries and bookings using LangChain and OpenAI.
 
 ## Features
 
@@ -12,10 +12,12 @@ A FastAPI-based travel agent chatbot that handles various travel-related inquiri
   - Student Inquiry
   - Promotions
   - Complaints
-- Step-by-step conversation flow
+- Step-by-step conversation flow with validation
 - Session management
 - Input validation
 - CORS support for frontend integration
+- LangChain integration for enhanced conversation handling
+- OpenAI integration for natural language processing
 
 ## Project Structure
 
@@ -26,11 +28,11 @@ TravelAgent.API/
 │   │   └── routes.py         # API endpoints and route handlers
 │   │
 │   ├── models/
-│   │   ├── enums.py         # Enumeration classes
+│   │   ├── enums.py         # Enumeration classes (ConversationStep, CategoryType)
 │   │   └── schemas.py       # Pydantic models for request/response
 │   │
 │   ├── services/
-│   │   └── conversation.py  # Core conversation logic
+│   │   └── conversation.py  # Core conversation logic and flow management
 │   │
 │   ├── config/             # Configuration files
 │   │
@@ -79,31 +81,59 @@ pipenv shell
 5. Run the application:
 
 ```bash
-uvicorn app.main:app --reload
+pipenv run start
 ```
 
-The API will be available at `http://localhost:8000`
+The API will be available at `http://localhost:5000`
 
 ## API Documentation
 
 Once the server is running, you can access:
 
-- Swagger UI documentation: `http://localhost:8000/docs`
-- ReDoc documentation: `http://localhost:8000/redoc`
+- Swagger UI documentation: `http://localhost:5000/docs`
+- ReDoc documentation: `http://localhost:5000/redoc`
+
+## Conversation Flow
+
+The chatbot follows a structured conversation flow based on the selected category. Here's how it works:
+
+1. **Category Selection (GET_CATEGORY)**
+   - User selects from available categories
+   - Validates category input
+
+2. **Name Collection (GET_NAME)**
+   - Collects user's full name
+   - Validates name format (no email addresses)
+
+3. **Email Collection (GET_EMAIL)**
+   - Collects user's email address
+   - Validates email format
+
+4. **Destination Collection (GET_DESTINATION)**
+   - Collects travel destination
+   - Validates destination input
+
+5. **Date Collection (GET_DATES)**
+   - Collects travel dates
+   - Available for relevant categories
+
+6. **Ticket Count (GET_TICKETS_COUNT)**
+   - Collects number of tickets
+   - Only for Air Travel and Packages categories
+
+7. **Booking Confirmation (CONFIRM_BOOKING)**
+   - Confirms booking details
+   - Available for booking-related categories
+
+8. **Completion (COMPLETED)**
+   - Provides final confirmation
+   - Category-specific completion messages
 
 ## API Endpoints
 
 ### POST /api/v1/chat
 
 Send a message to the chat bot. The first message will automatically start a new chat session and is processed as the category selection.
-
-## Conversation Flow and Request Examples
-
-### Step 1: Select Category (GET_CATEGORY)
-
-```bash
-POST /api/v1/chat
-```
 
 Request:
 
@@ -126,203 +156,24 @@ Response:
 }
 ```
 
-### Step 2: Provide Name (GET_NAME)
-
-```bash
-POST /api/v1/chat
-```
-
-Request:
-
-```json
-{
-  "user_id": "user123",
-  "message": "John Doe"
-}
-```
-
-Response:
-
-```json
-{
-  "message": "Thank you, John Doe. Could you provide your email address for contact purposes?",
-  "current_step": "get_email",
-  "collected_data": {
-    "category": "Air Travel",
-    "name": "John Doe"
-  }
-}
-```
-
-### Step 3: Provide Email (GET_EMAIL)
-
-```bash
-POST /api/v1/chat
-```
-
-Request:
-
-```json
-{
-  "user_id": "user123",
-  "message": "john.doe@example.com"
-}
-```
-
-Response:
-
-```json
-{
-  "message": "Got your email. What's your destination?",
-  "current_step": "get_destination",
-  "collected_data": {
-    "category": "Air Travel",
-    "name": "John Doe",
-    "email": "john.doe@example.com"
-  }
-}
-```
-
-### Step 4: Provide Destination (GET_DESTINATION)
-
-```bash
-POST /api/v1/chat
-```
-
-Request:
-
-```json
-{
-  "user_id": "user123",
-  "message": "Paris"
-}
-```
-
-Response:
-
-```json
-{
-  "message": "Great choice! When are you planning to travel?",
-  "current_step": "get_dates",
-  "collected_data": {
-    "category": "Air Travel",
-    "name": "John Doe",
-    "email": "john.doe@example.com",
-    "destination": "Paris"
-  }
-}
-```
-
-### Step 5: Provide Travel Dates (GET_DATES)
-
-```bash
-POST /api/v1/chat
-```
-
-Request:
-
-```json
-{
-  "user_id": "user123",
-  "message": "2024-06-15 to 2024-06-22"
-}
-```
-
-Response:
-
-```json
-{
-  "message": "How many tickets would you like to book?",
-  "current_step": "get_tickets_count",
-  "collected_data": {
-    "category": "Air Travel",
-    "name": "John Doe",
-    "email": "john.doe@example.com",
-    "destination": "Paris",
-    "travel_dates": "2024-06-15 to 2024-06-22"
-  }
-}
-```
-
-### Step 6: Provide Number of Tickets (GET_TICKETS_COUNT)
-
-```bash
-POST /api/v1/chat
-```
-
-Request:
-
-```json
-{
-  "user_id": "user123",
-  "message": "2"
-}
-```
-
-Response:
-
-```json
-{
-  "message": "Confirm your booking: \nName: John Doe\nEmail: john.doe@example.com\nDestination: Paris\nDates: 2024-06-15 to 2024-06-22\nTickets: 2\n\nType 'yes' to confirm or 'no' to cancel.",
-  "current_step": "confirm_booking",
-  "collected_data": {
-    "category": "Air Travel",
-    "name": "John Doe",
-    "email": "john.doe@example.com",
-    "destination": "Paris",
-    "travel_dates": "2024-06-15 to 2024-06-22",
-    "tickets_count": 2
-  }
-}
-```
-
-### Step 7: Confirm Booking (CONFIRM_BOOKING)
-
-```bash
-POST /api/v1/chat
-```
-
-Request:
-
-```json
-{
-  "user_id": "user123",
-  "message": "yes"
-}
-```
-
-Response:
-
-```json
-{
-  "message": "Thank you for your booking! Your request has been processed successfully. You will receive a confirmation email shortly.",
-  "current_step": "completed",
-  "collected_data": {
-    "category": "Air Travel",
-    "name": "John Doe",
-    "email": "john.doe@example.com",
-    "destination": "Paris",
-    "travel_dates": "2024-06-15 to 2024-06-22",
-    "tickets_count": 2,
-    "confirmed": true
-  }
-}
-```
-
 ## Development
 
 ### Running Tests
 
 ```bash
-pytest
+pipenv run pytest
 ```
 
-### Code Style
-
-The project follows PEP 8 guidelines. Use a linter to ensure code quality:
+### Code Formatting
 
 ```bash
-flake8
+pipenv run black .
+```
+
+### Linting
+
+```bash
+pipenv run flake8
 ```
 
 ## Contributing
